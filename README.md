@@ -24,11 +24,11 @@ You need: **Node 20+**, **PostgreSQL** with `timescaledb` + `pg_cron` extensions
 npm install
 
 # 2. Configure env
-cp .env.example .env
+##DONT DO THIS  cp .env.example .env
 # edit DATABASE_URL, REDIS_URL, JWT_SECRET
 
 # 3. Initialise the database
-npm run db:init   # runs schema → triggers → cron → seed
+# DEFINETLY DONT DO THIS npm run db:init   # runs schema → triggers → cron → seed
 
 # 4. Run frontend + backend together
 npm start
@@ -44,7 +44,7 @@ cd backend && npm run simulate
 - **Admin:** `admin@ecogrid.io` / `admin123`
 - **User:**  `user@ecogrid.io`  / `user123`
 
-## Quick start (Docker)
+## HAVENT TRIED THIS YET  Quick start (Docker) 
 
 ```bash
 npm run docker:up
@@ -64,7 +64,7 @@ Brings up Postgres+TimescaleDB+pg_cron, Redis, the backend, and the frontend in 
 | 7 | Role-based auth | JWT (Bearer) + bcrypt; `admin` and `user` roles enforced server-side and in routing |
 | 8 | Containerised | Multi-service `docker-compose.yml` |
 
-## Architecture
+## Architecture  MEOW MEOW
 
 ```
 ┌──────────┐  WebSocket   ┌────────────┐  LISTEN/NOTIFY   ┌─────────────────┐
