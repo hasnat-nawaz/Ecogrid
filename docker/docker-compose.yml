@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: timescale/timescaledb-ha:pg16
+    environment:
+      POSTGRES_USER: ecogrid
+      POSTGRES_PASSWORD: ecogrid
+      POSTGRES_DB: ecogrid
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/home/postgres/pgdata/data
+      - ../database:/docker-entrypoint-initdb.d:ro
+    command: ["postgres", "-c", "shared_preload_libraries=timescaledb,pg_cron", "-c", "cron.database_name=ecogrid"]
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  backend:
+    build: { context: .., dockerfile: docker/backend.Dockerfile }
+    environment:
+      DATABASE_URL: postgresql://ecogrid:ecogrid@postgres:5432/ecogrid
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-secret-change-me
+      FRONTEND_ORIGIN: http://localhost:5173
+      PORT: 4000
+    depends_on: [postgres, redis]
+    ports: ["4000:4000"]
+
+  frontend:
+    build: { context: .., dockerfile: docker/frontend.Dockerfile }
+    environment:
+      VITE_API_URL: http://localhost:4000
+      VITE_WS_URL: ws://localhost:4000
+    depends_on: [backend]
+    ports: ["5173:5173"]
+
+volumes:
+  pgdata:
