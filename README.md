@@ -15,41 +15,149 @@ ecogrid/
 └── README.md
 ```
 
-## Quick start (local, without Docker)
+## Prerequisites
 
-You need: **Node 20+**, **PostgreSQL** with `timescaledb` + `pg_cron` extensions (or a Neon project with both enabled), and a **Redis** instance (optional — caching falls back gracefully).
+### Node.js 20+
+
+The project requires **Node 20 or higher**. The root `package.json` uses `concurrently` which requires modern JS syntax (`??`, `?.`) unavailable in older Node versions. If `npm start` throws a `SyntaxError: Unexpected token '?'` error, your system Node is too old.
+
+Install Node 20 via `nvm` (recommended):
 
 ```bash
-# 1. Install everything
-npm install
-
-# 2. Configure env
-##DONT DO THIS  cp .env.example .env
-# edit DATABASE_URL, REDIS_URL, JWT_SECRET
-
-# 3. Initialise the database
-# DEFINETLY DONT DO THIS npm run db:init   # runs schema → triggers → cron → seed
-
-# 4. Run frontend + backend together
-npm start
-
-# 5. (in another terminal) start the meter simulator so dashboards light up
-cd backend && npm run simulate
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install 20
+nvm use 20
+nvm alias default 20
+node --version   # should print v20.x.x
 ```
 
-- Frontend → http://localhost:5173
-- Backend  → http://localhost:4000  (`/health` for sanity check)
+Or via apt:
 
-### Demo credentials (created by `database/seed.sql`)
-- **Admin:** `admin@ecogrid.io` / `admin123`
-- **User:**  `user@ecogrid.io`  / `user123`
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+node --version
+```
 
-## HAVENT TRIED THIS YET  Quick start (Docker) 
+### PostgreSQL (Neon recommended)
+
+Use a [Neon](https://neon.tech) project with the `timescaledb` and `pg_cron` extensions enabled (toggle them in the Neon console under **Extensions** before running `db:init`). A local PostgreSQL install with both extensions also works.
+
+### Redis
+
+Redis is used to cache API responses. It is **optional** — if `REDIS_URL` is not set or Redis is unavailable the backend falls back gracefully and all features still work, just without caching.
+
+To install Redis locally on Ubuntu/Debian:
+
+```bash
+sudo apt install redis-server -y
+sudo systemctl start redis
+redis-cli ping   # should reply PONG
+```
+
+---
+
+## Quick start (local, without Docker)
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+This installs root, backend, and frontend dependencies in one step.
+
+### 2. Configure environment variables
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and fill in:
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string (e.g. Neon URL with `?sslmode=require`) |
+| `REDIS_URL` | Redis URL — `redis://localhost:6379` for local, or omit to disable caching |
+| `JWT_SECRET` | Any long random string |
+| `PORT` | Backend port (default `4000`) |
+| `FRONTEND_ORIGIN` | Frontend URL for CORS (default `http://localhost:5173`) |
+
+Frontend `.env` (inside `frontend/`):
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_URL` | Backend API base URL — `http://localhost:4000` |
+| `VITE_WS_URL` | WebSocket URL — `ws://localhost:4000/ws` |
+
+### 3. Initialise the database
+
+> ⚠️ Only run this once. It drops and recreates all tables, triggers, and seed data.
+
+```bash
+npm run db:init
+```
+
+This applies in order: `schema.sql` → `triggers_procedure.sql` → `cron_jobs.sql` → `seed.sql`.
+
+### 4. Run the app
+
+You need **three terminals** running simultaneously:
+
+**Terminal 1 — Backend**
+```bash
+cd backend && npm start
+# Listening on http://localhost:4000
+```
+
+**Terminal 2 — Frontend**
+```bash
+cd frontend && npm run dev
+# Listening on http://localhost:5173
+```
+
+**Terminal 3 — Meter simulator**
+```bash
+cd backend && npm run simulate
+# Streams synthetic readings for all active meters every 2s
+```
+
+Or run backend + frontend together from the root (no simulator):
+
+```bash
+npm start
+```
+
+### 5. Open the app
+
+- **Frontend** → http://localhost:5173
+- **Backend health check** → http://localhost:4000/health
+
+### Demo credentials
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | `admin@ecogrid.io` | `admin123` |
+| User | `user@ecogrid.io` | `user123` |
+
+---
+
+## Quick start (Docker)
 
 ```bash
 npm run docker:up
 ```
-Brings up Postgres+TimescaleDB+pg_cron, Redis, the backend, and the frontend in one command. The SQL files in `database/` are auto-applied on first boot.
+
+Brings up Postgres+TimescaleDB+pg_cron, Redis, backend, and frontend in one command. The SQL files in `database/` are auto-applied on first boot.
+
+To stop:
+
+```bash
+npm run docker:down
+```
+
+---
 
 ## Features
 
@@ -59,12 +167,14 @@ Brings up Postgres+TimescaleDB+pg_cron, Redis, the backend, and the frontend in 
 | 2 | Database-centric logic | Triggers on `readings` & `payments`, procedures `generate_invoice_for_connection`, `generate_invoices_for_period`, `mark_overdue_invoices` |
 | 3 | Time-of-Use billing | `get_tariff_rate(ts)` resolves Off-Peak / Standard / Peak rates; SUM(energy × rate) per period |
 | 4 | Real-time dashboard | Postgres `NOTIFY` → Node `LISTEN` → WebSocket fan-out → React `useLiveStream` hook |
-| 5 | Redis caching | KPI overview cached 15s; transparent fallback if Redis is unavailable |
+| 5 | Redis caching | All routes cached with TTLs tuned per data type; transparent fallback if Redis is unavailable |
 | 6 | Scheduled jobs | `pg_cron`: monthly billing (0 2 1 * *), daily overdue (0 3 * * *), weekly prune |
 | 7 | Role-based auth | JWT (Bearer) + bcrypt; `admin` and `user` roles enforced server-side and in routing |
 | 8 | Containerised | Multi-service `docker-compose.yml` |
 
-## Architecture  MEOW MEOW
+---
+
+## Architecture
 
 ```
 ┌──────────┐  WebSocket   ┌────────────┐  LISTEN/NOTIFY   ┌─────────────────┐
@@ -75,40 +185,75 @@ Brings up Postgres+TimescaleDB+pg_cron, Redis, the backend, and the frontend in 
                                 │                         │  procedures,    │
                                 ▼                         │  ToU billing    │
                             ┌────────┐                    └─────────────────┘
-                            │ Redis  │  (KPI cache)
+                            │ Redis  │  (API response cache)
                             └────────┘
 
                 Smart-meter simulator (backend/src/utils/simulator.js)
                   └─► INSERT readings → trigger NOTIFY → WS fan-out
 ```
 
+---
+
+## Redis caching
+
+All API routes are cached using a cache-aside pattern (`withCache(key, ttl, loader)` in `backend/src/services/cache.js`). Cache is busted on writes and on Postgres `NOTIFY` events via the WebSocket listener.
+
+| Route | TTL | Notes |
+|-------|-----|-------|
+| `GET /api/admin/overview` | 15s | Busted on NOTIFY |
+| `GET /api/admin/consumers` | 30s | |
+| `GET /api/admin/billing` | 20s | Busted after `/billing/run` |
+| `GET /api/admin/alerts` | 10s | Busted on NOTIFY |
+| Consumer lookup (internal) | 120s | Per-user, busted on profile change |
+| `GET /api/user/me` | 60s | |
+| `GET /api/user/consumption` | 30s | Busted on NOTIFY ecogrid_reading |
+| `GET /api/user/invoices` | 30s | Busted after payment |
+
+If `REDIS_URL` is not set, all cache calls are no-ops and the app runs normally against the database.
+
+---
+
 ## Database highlights
 
 - `readings` is a TimescaleDB **hypertable** partitioned by `ts`.
-- `trg_readings_monitor` raises a `load_alerts` row + `pg_notify('ecogrid_alert', …)` on any reading > 5 kWh.
+- `trg_readings_monitor` inserts a `load_alerts` row and fires `pg_notify('ecogrid_alert', …)` on any reading above 5 kWh.
 - Every insert also fires `pg_notify('ecogrid_reading', …)` so dashboards update live.
 - `generate_invoice_for_connection(conn, start, end)` performs ToU billing entirely in SQL.
-- `pg_cron` schedules monthly billing, daily overdue marking, and weekly pruning.
+- `pg_cron` schedules monthly billing, daily overdue marking, and weekly data pruning.
+
+> **Note:** PostgreSQL's `format()` function only supports `%s`, `%I`, and `%L` — it does not support printf-style specifiers like `%.2f`. Numeric formatting in trigger messages uses string concatenation with `ROUND()::text` instead.
+
+---
 
 ## Environment variables
 
-See `.env.example`. Backend reads `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `PORT`, `FRONTEND_ORIGIN`. Frontend reads `VITE_API_URL`, `VITE_WS_URL`.
+| Variable | Where | Description |
+|----------|-------|-------------|
+| `DATABASE_URL` | backend | Full PostgreSQL connection string |
+| `REDIS_URL` | backend | Redis connection string (optional) |
+| `JWT_SECRET` | backend | Secret for signing JWTs |
+| `PORT` | backend | HTTP port (default 4000) |
+| `FRONTEND_ORIGIN` | backend | Comma-separated allowed CORS origins |
+| `VITE_API_URL` | frontend | Backend REST base URL |
+| `VITE_WS_URL` | frontend | Backend WebSocket URL |
+| `SIM_TICK_MS` | backend | Simulator interval in ms (default 2000) |
 
-## Notes
-
-- **Neon DB**: enable the `timescaledb` and `pg_cron` extensions in the Neon console before `npm run db:init`.
-- **Redis is optional**: if `REDIS_URL` is not set, the backend prints a warning and skips caching — every other feature still works.
-- **CORS**: `FRONTEND_ORIGIN` accepts a comma-separated list.
+---
 
 ## Scripts
 
 | Script | What it does |
 |--------|--------------|
 | `npm install` | Installs root + backend + frontend deps |
-| `npm start`   | Runs backend (4000) and frontend (5173) concurrently |
-| `npm run db:init` | Applies schema, triggers, cron jobs, and seed |
-| `npm run docker:up` / `docker:down` | Compose up/down |
+| `npm start` | Runs backend (4000) and frontend (5173) concurrently |
+| `npm run db:init` | Applies schema, triggers, cron jobs, and seed data |
+| `npm run docker:up` | Starts all services via Docker Compose |
+| `npm run docker:down` | Stops all Docker services |
+| `cd backend && npm start` | Runs backend only |
 | `cd backend && npm run simulate` | Streams synthetic meter readings |
+| `cd frontend && npm run dev` | Runs frontend only |
+
+---
 
 ## License
 
