@@ -32,36 +32,35 @@ $$ LANGUAGE plpgsql STABLE;
 CREATE OR REPLACE FUNCTION trg_readings_monitor()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- A single 1-minute interval > 5 kWh is unusual residential load
   IF NEW.energy_consumed > 5 THEN
     INSERT INTO load_alerts (meter_id, ts, severity, message)
     VALUES (
       NEW.meter_id,
       NEW.ts,
       CASE WHEN NEW.energy_consumed > 10 THEN 'critical' ELSE 'warning' END,
-      format('High load on meter %s: %.2f kWh', NEW.meter_id, NEW.energy_consumed)
+      -- FIX: PostgreSQL format() only supports %s, %I, %L — not %.2f
+      -- Cast the numeric to text with rounding instead
+      'High load on meter ' || NEW.meter_id::text || ': ' || ROUND(NEW.energy_consumed, 2)::text || ' kWh'
     );
 
-    -- NOTIFY listeners (the Node backend LISTENs and pushes to WS clients)
     PERFORM pg_notify(
       'ecogrid_alert',
       json_build_object(
-        'meter_id', NEW.meter_id,
-        'ts', NEW.ts,
+        'meter_id',       NEW.meter_id,
+        'ts',             NEW.ts,
         'energy_consumed', NEW.energy_consumed
       )::text
     );
   END IF;
 
-  -- Always notify on every reading so dashboards can update in realtime
   PERFORM pg_notify(
     'ecogrid_reading',
     json_build_object(
-      'meter_id', NEW.meter_id,
-      'ts', NEW.ts,
+      'meter_id',       NEW.meter_id,
+      'ts',             NEW.ts,
       'energy_consumed', NEW.energy_consumed,
-      'voltage', NEW.voltage,
-      'current_amp', NEW.current_amp
+      'voltage',         NEW.voltage,
+      'current_amp',     NEW.current_amp
     )::text
   );
 
@@ -76,7 +75,6 @@ FOR EACH ROW EXECUTE FUNCTION trg_readings_monitor();
 
 -- ----------------------------------------------------------------------------
 -- PROCEDURE: generate_invoice_for_connection(conn, period_start, period_end)
--- Computes ToU billing for a connection over a billing period.
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE PROCEDURE generate_invoice_for_connection(
   p_connection_id INT,
@@ -96,7 +94,6 @@ BEGIN
     RETURN;
   END IF;
 
-  -- ToU billing: sum (energy * tariff_rate_at_ts) over all readings
   SELECT
     COALESCE(SUM(energy_consumed), 0),
     COALESCE(SUM(energy_consumed * get_tariff_rate(ts)), 0)
@@ -113,7 +110,6 @@ $$ LANGUAGE plpgsql;
 
 -- ----------------------------------------------------------------------------
 -- PROCEDURE: generate_invoices_for_period — runs for ALL active connections
--- Called by pg_cron monthly.
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE PROCEDURE generate_invoices_for_period(
   p_period_start DATE DEFAULT (date_trunc('month', CURRENT_DATE - INTERVAL '1 month'))::DATE,
