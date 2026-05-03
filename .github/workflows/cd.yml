@@ -3,7 +3,7 @@ name: CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feature/cicd-pipeline ]
 
 jobs:
   build-and-push:
