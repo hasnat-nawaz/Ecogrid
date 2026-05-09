@@ -73,8 +73,12 @@ r.get('/alerts', authRequired, adminOnly, async (_req, res) => {
 // Write — bust billing + overview caches so next poll reflects new invoices.
 r.post('/billing/run', authRequired, adminOnly, async (req, res) => {
   const { period_start, period_end } = req.body || {};
-  await query(`CALL generate_invoices_for_period($1::date, $2::date)`,
-    [period_start || null, period_end || null]);
+  if (!period_start || !period_end) {
+    await query(`CALL generate_invoices_for_period()`);
+  } else {
+    await query(`CALL generate_invoices_for_period($1::date, $2::date)`,
+      [period_start, period_end]);
+  }
 
   await cacheDel('admin:overview', 'admin:billing');
 
