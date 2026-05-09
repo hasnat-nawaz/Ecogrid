@@ -136,10 +136,15 @@ npm start
 
 ### Demo credentials
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | `admin@ecogrid.io` | `admin123` |
-| User | `user@ecogrid.io` | `user123` |
+The seed creates one admin and two consumer accounts. Alice is in Sector A with a single meter; Bob is in Sector B with two meters (primary + secondary).
+
+| Role | Email | Password | Region | Meters |
+|------|-------|----------|--------|--------|
+| Admin | `admin@ecogrid.io` | `admin123` | — | — |
+| User · Alice | `alice@ecogrid.io` | `alice123` | Sector A | `MTR-0001` |
+| User · Bob | `bob@ecogrid.io` | `bob123` | Sector B | `MTR-0002`, `MTR-0003` |
+
+> Re-run `npm run db:init` any time you want to reset back to this clean topology — the seed `TRUNCATE`s every domain table before re-inserting. After reseeding, restart the simulator (`cd backend && npm run simulate`) so it picks up the fresh meter ids.
 
 ---
 

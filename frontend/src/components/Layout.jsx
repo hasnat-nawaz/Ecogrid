@@ -8,32 +8,43 @@ export default function Layout({ children }) {
   const { connected } = useLiveStream();
 
   const adminLinks = [
-    ['/admin', 'Overview'],
-    ['/admin/consumers', 'Consumers'],
-    ['/admin/billing', 'Billing'],
-    ['/admin/alerts', 'Alerts'],
+    ['/admin',              'System Overview', '◎'],
+    ['/admin/consumers',    'Consumers',       '👥'],
+    ['/admin/connections',  'Connections',     '⌬'],
+    ['/admin/consumption',  'Consumption',     '⚡'],
+    ['/admin/billing',      'Invoices',        '₨'],
+    ['/admin/alerts',       'Alerts',          '⚠'],
   ];
   const userLinks = [
-    ['/dashboard', 'Usage'],
-    ['/billing', 'Billing'],
+    ['/dashboard', 'My Usage',  '⚡'],
+    ['/meters',    'My Meters', '⌬'],
+    ['/billing',   'Billing',   '₨'],
+    ['/profile',   'Profile',   '👤'],
   ];
   const links = user?.role === 'admin' ? adminLinks : userLinks;
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <h1>⚡ EcoGrid</h1>
-        {links.map(([to, label]) => (
+        <div className="brand">
+          <div className="logo">⚡</div>
+          <div>
+            <div className="name">EcoGrid</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>Smart Grid Console</div>
+          </div>
+        </div>
+        {links.map(([to, label, icon]) => (
           <NavLink key={to} to={to} end className={({ isActive }) => (isActive ? 'active' : '')}>
-            {label}
+            <span className="nav-icon">{icon}</span>
+            <span>{label}</span>
           </NavLink>
         ))}
         <div className="spacer" />
         <div className="row" style={{ padding: '0 12px', fontSize: 12, color: 'var(--muted)' }}>
-          <span className="live-dot" style={{ background: connected ? 'var(--primary)' : 'var(--danger)' }} />
+          <span className="live-dot" style={{ background: connected ? 'var(--ok)' : 'var(--danger)' }} />
           {connected ? 'live' : 'offline'}
         </div>
-        <div style={{ padding: '8px 12px', color: 'var(--muted)', fontSize: 12 }}>{user?.email}</div>
+        <div className="footer">{user?.email}</div>
         <button className="ghost" onClick={() => { logout(); nav('/login'); }}>Sign out</button>
       </aside>
       <main>{children}</main>

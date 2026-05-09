@@ -2,12 +2,21 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
+
 import AdminOverview from './pages/AdminOverview.jsx';
 import AdminConsumers from './pages/AdminConsumers.jsx';
+import AdminConsumerProfile from './pages/AdminConsumerProfile.jsx';
+import AdminConnections from './pages/AdminConnections.jsx';
+import AdminConsumption from './pages/AdminConsumption.jsx';
 import AdminBilling from './pages/AdminBilling.jsx';
+import AdminGenerateInvoice from './pages/AdminGenerateInvoice.jsx';
 import AdminAlerts from './pages/AdminAlerts.jsx';
+import AdminAlertDetail from './pages/AdminAlertDetail.jsx';
+
 import UserDashboard from './pages/UserDashboard.jsx';
 import UserBilling from './pages/UserBilling.jsx';
+import UserProfile from './pages/UserProfile.jsx';
+import UserMeters from './pages/UserMeters.jsx';
 
 function Protect({ role, children }) {
   const { user, ready } = useAuth();
@@ -30,13 +39,20 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      <Route path="/admin"           element={<Protect role="admin"><AdminOverview /></Protect>} />
-      <Route path="/admin/consumers" element={<Protect role="admin"><AdminConsumers /></Protect>} />
-      <Route path="/admin/billing"   element={<Protect role="admin"><AdminBilling /></Protect>} />
-      <Route path="/admin/alerts"    element={<Protect role="admin"><AdminAlerts /></Protect>} />
+      <Route path="/admin"                       element={<Protect role="admin"><AdminOverview /></Protect>} />
+      <Route path="/admin/consumers"             element={<Protect role="admin"><AdminConsumers /></Protect>} />
+      <Route path="/admin/consumers/:id"         element={<Protect role="admin"><AdminConsumerProfile /></Protect>} />
+      <Route path="/admin/connections"           element={<Protect role="admin"><AdminConnections /></Protect>} />
+      <Route path="/admin/consumption"           element={<Protect role="admin"><AdminConsumption /></Protect>} />
+      <Route path="/admin/billing"               element={<Protect role="admin"><AdminBilling /></Protect>} />
+      <Route path="/admin/billing/generate"      element={<Protect role="admin"><AdminGenerateInvoice /></Protect>} />
+      <Route path="/admin/alerts"                element={<Protect role="admin"><AdminAlerts /></Protect>} />
+      <Route path="/admin/alerts/:id"            element={<Protect role="admin"><AdminAlertDetail /></Protect>} />
 
       <Route path="/dashboard" element={<Protect><UserDashboard /></Protect>} />
       <Route path="/billing"   element={<Protect><UserBilling /></Protect>} />
+      <Route path="/profile"   element={<Protect><UserProfile /></Protect>} />
+      <Route path="/meters"    element={<Protect><UserMeters /></Protect>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

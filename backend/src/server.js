@@ -25,7 +25,7 @@ app.use('/api/user', userRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error('[err]', err);
-  res.status(500).json({ error: 'internal error' });
+  res.status(500).json({ error: err?.message || 'internal error' });
 });
 
 const PORT = Number(process.env.PORT || 4000);
@@ -36,4 +36,12 @@ server.listen(PORT, () => {
   console.log(`\n⚡ EcoGrid backend ready`);
   console.log(`   HTTP : http://localhost:${PORT}`);
   console.log(`   WS   : ws://localhost:${PORT}/ws\n`);
+});
+
+// Hard guards: never let a stray error crash the process
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err);
 });
