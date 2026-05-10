@@ -4,15 +4,13 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "start": "node --watch src/server.js",
-    "start:prod": "node src/server.js",
-    "simulate": "node src/utils/simulator.js"
+  "start": "node src/server.js",
+  "simulate": "node src/utils/simulator.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "ecogrid": "file:..",
     "express": "^4.21.0",
     "@upstash/redis": "^1.31.0",
     "jsonwebtoken": "^9.0.2",
