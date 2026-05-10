@@ -1,28 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import Layout from '../components/Layout';
 import Loader from '../components/Loader';
-import { useLiveStream } from '../hooks/useLiveStream';
 import { usePoll } from '../hooks/usePoll';
 import { kwh, rangeLabel, fillBuckets, currentMonthRange, lastNDaysRange, todayRange } from '../lib/format';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid,
 } from 'recharts';
-
-const LIVE_WINDOW_SECONDS = 60;
-const FRESH_READING_MS    = 2500;
-
-function buildInitialLive() {
-  const now = Date.now();
-  const out = [];
-  for (let i = LIVE_WINDOW_SECONDS - 1; i >= 0; i--) {
-    const t = new Date(now - i * 1000).toLocaleTimeString('en-GB', { hour12: false });
-    out.push({ t, kWh: 0 });
-  }
-  return out;
-}
 
 export default function UserDashboard() {
   const nav = useNavigate();
@@ -49,36 +35,6 @@ export default function UserDashboard() {
 
   const { data: cons, loading: l2 } = usePoll(() => api(`/api/user/consumption?${qs}`), 3000, [qs]);
 
-  // ── Live chart ──
-  const [live, setLive] = useState(buildInitialLive);
-  const { last, connected } = useLiveStream();
-  const myMeterIds = useMemo(() => new Set((me?.connections || []).map((c) => c.meter_id)), [me]);
-
-  const latestReadingRef = useRef({ kWh: 0, at: 0 });
-  useEffect(() => {
-    if (last?.type === 'ecogrid_reading' && myMeterIds.has(last.payload.meter_id)) {
-      latestReadingRef.current = {
-        kWh: Number(last.payload.energy_consumed),
-        at:  Date.now(),
-      };
-    }
-  }, [last, myMeterIds]);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      const now   = Date.now();
-      const fresh = now - latestReadingRef.current.at < FRESH_READING_MS;
-      const kWh   = fresh ? latestReadingRef.current.kWh : 0;
-      const t     = new Date(now).toLocaleTimeString('en-GB', { hour12: false });
-      setLive((arr) => {
-        const next = arr.length >= LIVE_WINDOW_SECONDS ? arr.slice(1) : arr.slice();
-        next.push({ t, kWh });
-        return next;
-      });
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
-
   const isDirty =
     dFrom !== filters.from || dTo !== filters.to || dMeter !== filters.meter_id;
 
@@ -103,7 +59,6 @@ export default function UserDashboard() {
   // — even when there were no readings on intermediate days.
   const series = fillBuckets(cons?.series || [], filters.from, filters.to, bucketName);
   const total = series.reduce((s, p) => s + p.kWh, 0);
-  const isStreaming = connected && Date.now() - latestReadingRef.current.at < FRESH_READING_MS;
 
   return (
     <Layout>
@@ -187,43 +142,6 @@ export default function UserDashboard() {
               Unapplied changes — click <strong>Apply Filters</strong>.
             </span>
           )}
-        </div>
-      </div>
-
-      {/* ── Live chart ── */}
-      <div className="card fade-in" style={{ marginBottom: 16 }}>
-        <div className="row between" style={{ marginBottom: 12 }}>
-          <div>
-            <h3 className="subtitle" style={{ margin: 0 }}>Live consumption</h3>
-            <span className="muted text-sm">Last {LIVE_WINDOW_SECONDS} seconds</span>
-          </div>
-          <span className="range-pill">
-            <span className="live-dot"
-                  style={{ background: connected ? 'var(--ok)' : 'var(--danger)' }} />
-            {connected
-              ? (isStreaming ? 'Streaming' : 'Idle (no readings)')
-              : 'Offline'}
-          </span>
-        </div>
-        <div style={{ width: '100%', height: 220 }}>
-          <ResponsiveContainer>
-            <AreaChart data={live} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="liveGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"  stopColor="#4d8df0" stopOpacity={0.45} />
-                  <stop offset="100%" stopColor="#4d8df0" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid stroke="rgba(34,51,84,0.10)" strokeDasharray="3 3" />
-              <XAxis dataKey="t" stroke="#8c98b3" fontSize={10} minTickGap={30} />
-              <YAxis stroke="#8c98b3" fontSize={11}
-                     domain={[0, (dataMax) => Math.max(Number(dataMax) * 1.2, 1)]}
-                     allowDecimals />
-              <Tooltip />
-              <Area type="monotone" dataKey="kWh" stroke="#2f6fd8" strokeWidth={2.4}
-                    fill="url(#liveGrad)" isAnimationActive={false} />
-            </AreaChart>
-          </ResponsiveContainer>
         </div>
       </div>
 
