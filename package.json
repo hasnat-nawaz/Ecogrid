@@ -4,8 +4,7 @@
   "private": true,
   "description": "EcoGrid — Autonomous Smart Grid Management System (root orchestrator)",
   "scripts": {
-    "install": "npm install --prefix backend && npm install --prefix frontend",
-    "postinstall": "echo '\\n✅ EcoGrid root install complete. Run: npm start'",
+    "postinstall": "npm install --prefix backend && npm install --prefix frontend && echo '\\n✅ EcoGrid root install complete. Run: npm start'",
     "start": "concurrently -n BACKEND,FRONTEND -c blue,magenta \"npm start --prefix backend\" \"npm run dev --prefix frontend\"",
     "dev": "npm start",
     "db:init": "psql \"$DATABASE_URL\" -f database/schema.sql && psql \"$DATABASE_URL\" -f database/triggers_procedures.sql && psql \"$DATABASE_URL\" -f database/cron_jobs.sql && psql \"$DATABASE_URL\" -f database/seed.sql",
