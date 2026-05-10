@@ -174,7 +174,7 @@ npm run docker:down
 | 4 | Real-time dashboard | Postgres `NOTIFY` → Node `LISTEN` → WebSocket fan-out → React `useLiveStream` hook |
 | 5 | Redis caching | All routes cached with TTLs tuned per data type; transparent fallback if Redis is unavailable |
 | 6 | Scheduled jobs | `pg_cron`: monthly billing (0 2 1 * *), daily overdue (0 3 * * *), weekly prune |
-| 7 | Role-based auth | JWT (Bearer) + bcrypt; `admin` and `user` roles enforced server-side and in routing |
+| 7 | Role-based auth | JWT (Bearer) + bcryptjs; `admin` and `user` roles enforced server-side and in routing |
 | 8 | Containerised | Multi-service `docker-compose.yml` |
 
 ---
