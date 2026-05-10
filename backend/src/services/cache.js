@@ -1,28 +1,30 @@
 // backend/src/services/cache.js
-import Redis from 'ioredis';
+import { Redis } from '@upstash/redis';
 import 'dotenv/config';
 
 let client = null;
 
 export function getRedis() {
   if (client) return client;
-  if (!process.env.REDIS_URL) {
-    console.warn('[redis] REDIS_URL not set — caching disabled');
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    console.warn('[redis] UPSTASH_REDIS_REST_URL or TOKEN not set — caching disabled');
     return null;
   }
-  client = new Redis(process.env.REDIS_URL, { lazyConnect: false, maxRetriesPerRequest: 2 });
-  client.on('error', (e) => console.warn('[redis]', e.message));
+  client = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
   return client;
 }
 
 export async function cacheGet(key) {
   const r = getRedis(); if (!r) return null;
-  try { const v = await r.get(key); return v ? JSON.parse(v) : null; } catch { return null; }
+  try { return await r.get(key); } catch { return null; }
 }
 
 export async function cacheSet(key, value, ttlSec = 30) {
   const r = getRedis(); if (!r) return;
-  try { await r.set(key, JSON.stringify(value), 'EX', ttlSec); } catch {}
+  try { await r.set(key, value, { ex: ttlSec }); } catch {}
 }
 
 /**
@@ -38,17 +40,17 @@ export async function cacheDel(...keys) {
     const toDelete = [];
     for (const k of keys.flat()) {
       if (k.includes('*')) {
-        let cursor = '0';
+        let cursor = 0;
         do {
-          const [next, found] = await r.scan(cursor, 'MATCH', k, 'COUNT', 100);
+          const [next, found] = await r.scan(cursor, { match: k, count: 100 });
           cursor = next;
-          toDelete.push(...found);
-        } while (cursor !== '0');
+          if (found && found.length) toDelete.push(...found);
+        } while (cursor !== 0 && cursor !== '0');
       } else {
         toDelete.push(k);
       }
     }
-    if (toDelete.length) await r.del(toDelete);
+    if (toDelete.length) await r.del(...toDelete);
   } catch {}
 }
 
