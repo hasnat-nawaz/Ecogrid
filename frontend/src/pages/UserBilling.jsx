@@ -19,14 +19,21 @@ export default function UserBilling() {
 
   return (
     <Layout>
-      <h2 className="section-title">Billing History</h2>
+      <div className="page-head fade-in">
+        <div>
+          <div className="eyebrow">My account</div>
+          <h2>Billing History</h2>
+        </div>
+        <span className="range-pill"><strong>{rows.length}</strong>&nbsp;invoice{rows.length === 1 ? '' : 's'}</span>
+      </div>
+
       <div className="card fade-in">
         <table>
           <thead><tr><th>Period</th><th>Units</th><th>Amount</th><th>Status</th><th></th></tr></thead>
           <tbody>
             {rows.map((i) => (
               <tr key={i.invoice_id}>
-                <td>{shortDate(i.period_start)} → {shortDate(i.period_end)}</td>
+                <td>{shortDate(i.period_start)} – {shortDate(i.period_end)}</td>
                 <td>{kwh(i.total_units)}</td>
                 <td><strong>{rs(i.total_amount)}</strong></td>
                 <td><span className={`badge ${i.status}`}>{i.status}</span></td>

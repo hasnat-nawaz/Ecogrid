@@ -22,9 +22,12 @@ export default function AdminConnections() {
 
   return (
     <Layout>
-      <div className="toolbar">
-        <h2 className="section-title" style={{ margin: 0 }}>Connections & Meters</h2>
-        <span className="muted">{rows.length} cards</span>
+      <div className="page-head fade-in">
+        <div>
+          <div className="eyebrow">Admin · Network</div>
+          <h2>Connections &amp; Meters</h2>
+        </div>
+        <span className="range-pill"><strong>{rows.length}</strong>&nbsp;active cards</span>
       </div>
 
       <form onSubmit={submit} className="card" style={{ padding: 14, marginBottom: 18 }}>

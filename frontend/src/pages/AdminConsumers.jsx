@@ -22,9 +22,12 @@ export default function AdminConsumers() {
 
   return (
     <Layout>
-      <div className="toolbar">
-        <h2 className="section-title" style={{ margin: 0 }}>Consumers</h2>
-        <span className="muted">{rows.length} shown</span>
+      <div className="page-head fade-in">
+        <div>
+          <div className="eyebrow">Admin · Directory</div>
+          <h2>Consumers</h2>
+        </div>
+        <span className="range-pill"><strong>{rows.length}</strong>&nbsp;shown</span>
       </div>
 
       <form onSubmit={submit} className="card" style={{ padding: 14, marginBottom: 16 }}>

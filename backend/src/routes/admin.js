@@ -194,9 +194,18 @@ r.get('/regions', authRequired, adminOnly, safe(async (_req, res) => {
 //   meter_id
 r.get('/consumption', authRequired, adminOnly, safe(async (req, res) => {
   const { region_id, subregion_id, meter_id } = req.query;
-  const from = req.query.from ? new Date(req.query.from) : new Date(Date.now() - 7 * 24 * 3600 * 1000);
-  const to   = req.query.to   ? new Date(req.query.to)   : new Date();
+  // Accept either a full ISO timestamp or a bare YYYY-MM-DD. Bare dates expand
+  // to start-of-day for `from` and end-of-day for `to` so single-day picks and
+  // ranges ending today include all readings.
+  const isBareDate = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+  const from = req.query.from
+    ? (isBareDate(req.query.from) ? new Date(`${req.query.from}T00:00:00.000Z`) : new Date(req.query.from))
+    : new Date(Date.now() - 7 * 24 * 3600 * 1000);
+  const to   = req.query.to
+    ? (isBareDate(req.query.to)   ? new Date(`${req.query.to}T23:59:59.999Z`) : new Date(req.query.to))
+    : new Date();
   if (isNaN(from) || isNaN(to)) return res.status(400).json({ error: 'invalid dates' });
+  if (to < from) return res.status(400).json({ error: 'to is before from' });
 
   const conds = [`r.ts >= $1`, `r.ts <= $2`];
   const params = [from.toISOString(), to.toISOString()];

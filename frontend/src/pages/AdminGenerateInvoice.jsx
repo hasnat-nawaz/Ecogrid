@@ -68,9 +68,12 @@ export default function AdminGenerateInvoice() {
 
   return (
     <Layout>
-      <div className="toolbar">
-        <button className="ghost small" onClick={() => nav('/admin/billing')}>← Back</button>
-        <h2 className="section-title" style={{ margin: 0 }}>Generate Invoices</h2>
+      <div className="page-head fade-in">
+        <div>
+          <button className="ghost small" style={{ marginBottom: 10 }} onClick={() => nav('/admin/billing')}>← Back to invoices</button>
+          <div className="eyebrow">Admin · Finance</div>
+          <h2>Generate invoices</h2>
+        </div>
       </div>
 
       <form onSubmit={run} className="grid-2 fade-in">
@@ -89,10 +92,6 @@ export default function AdminGenerateInvoice() {
           <p className="muted" style={{ marginTop: 12 }}>
             Invoices are generated for every active connection. Consumers whose meters started
             after the period end are billed <strong>Rs 0.00</strong> automatically.
-          </p>
-          <p className="muted" style={{ marginTop: 8 }}>
-            Calculation runs entirely inside Postgres via the <code>generate_invoices_for_period(date,date)</code> stored procedure.
-            Each reading is multiplied by the matching ToU rate using <code>get_tariff_rate(ts)</code>.
           </p>
         </div>
 

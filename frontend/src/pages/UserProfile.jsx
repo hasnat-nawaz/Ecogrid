@@ -36,10 +36,12 @@ export default function UserProfile() {
 
   return (
     <Layout>
-      <div className="toolbar">
-        <button className="ghost small" onClick={() => nav('/dashboard')}>← Dashboard</button>
-        <h2 className="section-title" style={{ margin: 0 }}>{c.name}</h2>
-        <span className="muted">#{c.consumer_id}</span>
+      <div className="page-head fade-in">
+        <div>
+          <button className="ghost small" style={{ marginBottom: 10 }} onClick={() => nav('/dashboard')}>← Dashboard</button>
+          <div className="eyebrow">My account · #{c.consumer_id}</div>
+          <h2>{c.name}</h2>
+        </div>
       </div>
 
       <div className="grid-2 fade-in">

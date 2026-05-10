@@ -43,9 +43,15 @@ export default function AdminAlerts() {
 
   return (
     <Layout>
-      <div className="toolbar">
-        <h2 className="section-title" style={{ margin: 0 }}>Load Alerts</h2>
-        <span className="muted">Live · auto-refresh every 3s</span>
+      <div className="page-head fade-in">
+        <div>
+          <div className="eyebrow">Admin · Live monitoring</div>
+          <h2>Load Alerts</h2>
+        </div>
+        <span className="range-pill">
+          <span className="live-dot" />
+          <strong>Live</strong>&nbsp;auto-refresh 3s
+        </span>
       </div>
 
       {/* Filter chips */}

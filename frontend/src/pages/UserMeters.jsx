@@ -26,22 +26,25 @@ export default function UserMeters() {
 
   return (
     <Layout>
-      <div className="toolbar">
-        <button className="ghost small" onClick={() => nav('/dashboard')}>← Dashboard</button>
-        <h2 className="section-title" style={{ margin: 0 }}>My Meters</h2>
-        <span className="muted">{conns.length} total · {active} active</span>
+      <div className="page-head fade-in">
+        <div>
+          <button className="ghost small" style={{ marginBottom: 10 }} onClick={() => nav('/dashboard')}>← Dashboard</button>
+          <div className="eyebrow">My account</div>
+          <h2>My Meters</h2>
+        </div>
+        <span className="range-pill"><strong>{conns.length}</strong>&nbsp;total · {active} active</span>
       </div>
 
       <div className="stat-strip" style={{ marginBottom: 18 }}>
-        <div className="card stat" style={{ background: 'rgba(63,169,245,0.06)' }}>
+        <div className="card stat">
           <div className="label">Total Meters</div>
           <div className="value">{conns.length}</div>
         </div>
-        <div className="card stat" style={{ background: 'rgba(56,211,159,0.06)' }}>
+        <div className="card stat">
           <div className="label">Active</div>
           <div className="value" style={{ color: 'var(--ok)' }}>{active}</div>
         </div>
-        <div className="card stat" style={{ background: 'rgba(95,188,255,0.06)' }}>
+        <div className="card stat">
           <div className="label">30-Day Usage</div>
           <div className="value">{kwh(total30d, 1)}</div>
         </div>

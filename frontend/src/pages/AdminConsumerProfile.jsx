@@ -26,10 +26,12 @@ export default function AdminConsumerProfile() {
 
   return (
     <Layout>
-      <div className="toolbar">
-        <button className="ghost small" onClick={() => nav('/admin/consumers')}>← All Consumers</button>
-        <h2 className="section-title" style={{ margin: 0 }}>{c.name}</h2>
-        <span className="muted">#{c.consumer_id}</span>
+      <div className="page-head fade-in">
+        <div>
+          <button className="ghost small" style={{ marginBottom: 10 }} onClick={() => nav('/admin/consumers')}>← All consumers</button>
+          <div className="eyebrow">Consumer profile · #{c.consumer_id}</div>
+          <h2>{c.name}</h2>
+        </div>
       </div>
 
       <div className="grid-2 fade-in" style={{ marginBottom: 18 }}>
@@ -52,19 +54,19 @@ export default function AdminConsumerProfile() {
         <div className="card">
           <h3 className="subtitle">Account Summary</h3>
           <div className="stat-strip" style={{ marginTop: 8 }}>
-            <div className="card stat" style={{ background: 'rgba(63,169,245,0.06)' }}>
+            <div className="card stat">
               <div className="label">Last 30d Usage</div>
               <div className="value">{kwh(usage_30d_kwh, 1)}</div>
             </div>
-            <div className="card stat" style={{ background: 'rgba(63,169,245,0.06)' }}>
+            <div className="card stat">
               <div className="label">Total Invoices</div>
               <div className="value">{stats.total ?? 0}</div>
             </div>
-            <div className="card stat" style={{ background: 'rgba(56,211,159,0.06)' }}>
+            <div className="card stat">
               <div className="label">Paid Amount</div>
               <div className="value" style={{ color: 'var(--ok)' }}>{rs(stats.paid_amount || 0)}</div>
             </div>
-            <div className="card stat" style={{ background: 'rgba(255,181,71,0.06)' }}>
+            <div className="card stat">
               <div className="label">Total Billed</div>
               <div className="value">{rs(stats.billed || 0)}</div>
             </div>

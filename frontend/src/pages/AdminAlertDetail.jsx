@@ -24,9 +24,12 @@ export default function AdminAlertDetail() {
 
   return (
     <Layout>
-      <div className="toolbar">
-        <button className="ghost small" onClick={() => nav('/admin/alerts')}>← All Alerts</button>
-        <h2 className="section-title" style={{ margin: 0 }}>Alert #{a.alert_id}</h2>
+      <div className="page-head fade-in">
+        <div>
+          <button className="ghost small" style={{ marginBottom: 10 }} onClick={() => nav('/admin/alerts')}>← All alerts</button>
+          <div className="eyebrow">Incident report</div>
+          <h2>Alert #{a.alert_id}</h2>
+        </div>
         <span className={`badge ${a.severity}`}>{a.severity}</span>
       </div>
 
@@ -46,12 +49,11 @@ export default function AdminAlertDetail() {
         </div>
 
         <div className="card">
-          <h3 className="subtitle">What Happened</h3>
+          <h3 className="subtitle">What happened</h3>
           <p style={{ fontSize: 15, lineHeight: 1.55 }}>{a.message}</p>
-          <p className="muted" style={{ marginTop: 12 }}>
-            Alerts are raised by a Postgres trigger (<code>trg_readings_monitor</code>) the moment
-            a reading exceeds 5&nbsp;kWh in the sampled interval. Critical alerts fire above 10&nbsp;kWh
-            and are pushed live to all connected dashboards via WebSockets.
+          <p className="muted" style={{ marginTop: 12, fontSize: 13 }}>
+            Alerts are pushed live to every connected dashboard the moment a meter reading exceeds
+            its safe threshold.
           </p>
         </div>
       </div>
@@ -61,11 +63,11 @@ export default function AdminAlertDetail() {
         <div style={{ width: '100%', height: 280 }}>
           <ResponsiveContainer>
             <LineChart data={series}>
-              <CartesianGrid stroke="#1f3566" strokeDasharray="3 3" />
-              <XAxis dataKey="t" stroke="#8fa2cf" fontSize={11} />
-              <YAxis stroke="#8fa2cf" fontSize={11} />
-              <Tooltip contentStyle={{ background: '#0f1d3d', border: '1px solid #1f3566' }} />
-              <Line type="monotone" dataKey="kWh" stroke="#ff5c7a" strokeWidth={2} dot={{ r: 3 }} />
+              <CartesianGrid stroke="rgba(34,51,84,0.10)" strokeDasharray="3 3" />
+              <XAxis dataKey="t" stroke="#8c98b3" fontSize={11} />
+              <YAxis stroke="#8c98b3" fontSize={11} />
+              <Tooltip />
+              <Line type="monotone" dataKey="kWh" stroke="#d6486b" strokeWidth={2.4} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>

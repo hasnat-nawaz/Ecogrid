@@ -49,11 +49,15 @@ export default function AdminBilling() {
 
   return (
     <Layout>
-      <div className="toolbar">
-        <h2 className="section-title" style={{ margin: 0 }}>Invoices</h2>
-        <span className="muted">Currency: PKR (Rs)</span>
-        <div className="spacer" />
-        <button onClick={() => nav('/admin/billing/generate')}>Generate Invoice</button>
+      <div className="page-head fade-in">
+        <div>
+          <div className="eyebrow">Admin · Finance</div>
+          <h2>Invoices</h2>
+        </div>
+        <div className="row" style={{ gap: 10 }}>
+          <span className="range-pill"><strong>Currency</strong> PKR (Rs)</span>
+          <button onClick={() => nav('/admin/billing/generate')}>Generate Invoice</button>
+        </div>
       </div>
 
       {/* Search + filters */}
@@ -101,30 +105,29 @@ export default function AdminBilling() {
 
       <div className="grid-2 fade-in" style={{ marginBottom: 18 }}>
         <div className="card">
-          <h3 className="subtitle">Invoices by Status</h3>
+          <h3 className="subtitle">Invoices by status</h3>
           <div style={{ width: '100%', height: 240 }}>
             <ResponsiveContainer>
               <BarChart data={statusBars}>
-                <CartesianGrid stroke="#1f3566" strokeDasharray="3 3" />
-                <XAxis dataKey="status" stroke="#8fa2cf" fontSize={11} />
-                <YAxis stroke="#8fa2cf" fontSize={11} />
-                <Tooltip contentStyle={{ background: '#0f1d3d', border: '1px solid #1f3566' }} />
-                <Bar dataKey="count" fill="#3fa9f5" radius={[6, 6, 0, 0]} />
+                <CartesianGrid stroke="rgba(34,51,84,0.10)" strokeDasharray="3 3" />
+                <XAxis dataKey="status" stroke="#8c98b3" fontSize={11} />
+                <YAxis stroke="#8c98b3" fontSize={11} />
+                <Tooltip />
+                <Bar dataKey="count" fill="#4d8df0" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
         <div className="card">
-          <h3 className="subtitle">Revenue Trend (last 12 months)</h3>
+          <h3 className="subtitle">Revenue trend (last 12 months)</h3>
           <div style={{ width: '100%', height: 240 }}>
             <ResponsiveContainer>
               <LineChart data={monthSeries}>
-                <CartesianGrid stroke="#1f3566" strokeDasharray="3 3" />
-                <XAxis dataKey="month" stroke="#8fa2cf" fontSize={11} />
-                <YAxis stroke="#8fa2cf" fontSize={11} />
-                <Tooltip contentStyle={{ background: '#0f1d3d', border: '1px solid #1f3566' }}
-                         formatter={(v, n) => n === 'amount' ? rs(v) : v} />
-                <Line type="monotone" dataKey="amount" stroke="#3fa9f5" strokeWidth={2} dot={{ r: 3 }} />
+                <CartesianGrid stroke="rgba(34,51,84,0.10)" strokeDasharray="3 3" />
+                <XAxis dataKey="month" stroke="#8c98b3" fontSize={11} />
+                <YAxis stroke="#8c98b3" fontSize={11} />
+                <Tooltip formatter={(v, n) => (n === 'amount' ? rs(v) : v)} />
+                <Line type="monotone" dataKey="amount" stroke="#2f6fd8" strokeWidth={2.4} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -145,7 +148,7 @@ export default function AdminBilling() {
                     <strong>{i.consumer_name}</strong>
                     <div className="muted" style={{ fontSize: 11 }}>{i.consumer_email} · #{i.consumer_id}</div>
                   </td>
-                  <td>{shortDate(i.period_start)} → {shortDate(i.period_end)}</td>
+                  <td>{shortDate(i.period_start)} – {shortDate(i.period_end)}</td>
                   <td>{kwh(i.total_units)}</td>
                   <td><strong>{rs(i.total_amount)}</strong></td>
                   <td className="muted">{shortDate(i.generated_at)}</td>

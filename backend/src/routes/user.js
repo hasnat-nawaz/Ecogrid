@@ -74,9 +74,18 @@ r.get('/consumption', authRequired, async (req, res) => {
   const c = await consumerForUser(req.user.uid);
   if (!c) return res.json({ series: [] });
 
-  const from = req.query.from ? new Date(req.query.from) : new Date(Date.now() - 24 * 3600 * 1000);
-  const to   = req.query.to   ? new Date(req.query.to)   : new Date();
+  // Accept either a full ISO timestamp or a bare YYYY-MM-DD. For bare dates we
+  // anchor `from` to start-of-day and `to` to end-of-day so single-day ranges
+  // and ranges that end on "today" actually include all readings on that day.
+  const isBareDate = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+  const from = req.query.from
+    ? (isBareDate(req.query.from) ? new Date(`${req.query.from}T00:00:00.000Z`) : new Date(req.query.from))
+    : new Date(Date.now() - 24 * 3600 * 1000);
+  const to   = req.query.to
+    ? (isBareDate(req.query.to)   ? new Date(`${req.query.to}T23:59:59.999Z`) : new Date(req.query.to))
+    : new Date();
   if (isNaN(from) || isNaN(to)) return res.status(400).json({ error: 'invalid dates' });
+  if (to < from) return res.status(400).json({ error: 'to is before from' });
   const meterId = req.query.meter_id ? Number(req.query.meter_id) : null;
 
   const spanDays = (to - from) / (24 * 3600 * 1000);
