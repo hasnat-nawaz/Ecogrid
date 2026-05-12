@@ -5,8 +5,11 @@
 -- ============================================================================
 
 CREATE EXTENSION IF NOT EXISTS timescaledb;
+--This is built for time-series data (like sensor readings that happen every few seconds). It transforms regular tables into "hypertables," which automatically partition data into time-based chunks. This makes searching through millions of rows much faster.
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+--This provides cryptographic functions. It is used here to generate UUIDs (universally unique IDs) for users and to safely hash passwords.
 CREATE EXTENSION IF NOT EXISTS pg_cron;
+--This is a task scheduler that runs inside the database. It allows the system to run periodic jobs, such as automatically generating invoices at the end of every month.
 
 -- ----------------------------------------------------------------------------
 -- USERS / AUTH
